@@ -46,12 +46,14 @@ public class TspLoader {
                 if (line.equals("EOF")) {
                     break;
                 }
-                String[] params = line.split(" ");
-                if (params.length >= 3) {
+                String[] params = line.split("\\s+");
+                if (params.length == 3) {
                     double x = Double.parseDouble(params[1]);
                     double y = Double.parseDouble(params[2]);
                     Node newNode = new Node(x, y);
                     nodes.add(newNode);
+                } else {
+                    throw new NumberFormatException("Invalid cord value");
                 }
             }
         } catch (FileNotFoundException e) {

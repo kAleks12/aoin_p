@@ -44,7 +44,7 @@ public class GeneticAlgorithm {
         if (filename != null) {
             File csvFile = new File(filename);
             fileWriter = new FileWriter(csvFile);
-            fileWriter.write("iterations,best,worst,avg");
+            fileWriter.write("iterations,best,worst,avg\n");
         }
         var population = GeneticOperatorHelper.initialize(this.initType, graph, populationSize);
         var newPopulation = new ArrayList<Path>(populationSize);
