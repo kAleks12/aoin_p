@@ -44,9 +44,10 @@ public class GeneticAlgorithm {
         if (filename != null) {
             File csvFile = new File(filename);
             fileWriter = new FileWriter(csvFile);
+            fileWriter.write("iterations,best,worst,avg");
         }
         var population = GeneticOperatorHelper.initialize(this.initType, graph, populationSize);
-
+        var newPopulation = new ArrayList<Path>(populationSize);
         while (generation < generationLimit) {
             generation ++;
             population.sort(Comparator.comparing(Path::getCost));
@@ -57,11 +58,11 @@ public class GeneticAlgorithm {
             if (fileWriter != null){
                 saveMetrics(generation, population, fileWriter);
             }
-            var newPopulation = new ArrayList<Path>(populationSize);
 
             //Transfer the best paths unchanged
             for (int i = 0; i < eliteSize; i++) {
-                newPopulation.add(population.get(i));
+                var currPath = population.get(i);
+                newPopulation.add(new Path(currPath.getNodes(), currPath.getCost()));
             }
 
             //Create the rest of new population
@@ -74,13 +75,15 @@ public class GeneticAlgorithm {
                 } else {
                     children = List.of(path1);
                 }
-                children.forEach(path -> {
+                for (var child : children) {
                     if (RandomGenerator.randomDouble() < mutationProbability) {
-                        GeneticOperatorHelper.mutate(this.mutType, path, graph);
+                        GeneticOperatorHelper.mutate(this.mutType, child, graph);
                     }
-                    newPopulation.add(path);
-                });
+                    newPopulation.add(child);
+                }
             }
+            population = newPopulation.subList(0, populationSize);
+            newPopulation = new ArrayList<>(populationSize);
         }
         if (fileWriter != null) {
             fileWriter.close();
