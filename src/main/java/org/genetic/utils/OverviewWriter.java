@@ -14,7 +14,7 @@ import java.util.List;
 public class OverviewWriter {
     private final static Logger logger = LogManager.getLogger(OverviewWriter.class);
 
-    public static void saveMetrics(Algorithm alg, List<Path> results, String filename, boolean init) {
+    public static void saveMetrics(Algorithm alg, List<Path> results, String filename) {
         if (filename == null) {
             logger.warn("Filename is null, skipping saving metrics");
             return;
@@ -22,9 +22,6 @@ public class OverviewWriter {
         results.sort(Comparator.comparing(Path::getCost));
         File csvFile = new File(filename);
         try (var fileWriter = new FileWriter(csvFile, true)) {
-            if (init) {
-                fileWriter.write("alg,best,worst,avg,mean\n");
-            }
             StringBuilder line = new StringBuilder();
             line.append(alg.toString()).append(',');
             line.append(results.get(0).getCost()).append(',');

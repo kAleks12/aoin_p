@@ -37,14 +37,18 @@ public class GeneticAlgorithm {
         this.tournamentSize = builder.tournamentSize;
     }
 
-    public Path execute(DistanceMatrix graph, String filename) throws IOException {
+    public Path execute(DistanceMatrix graph, String filename) {
         int generation = 0;
         Path bestPath = null;
         FileWriter fileWriter = null;
         if (filename != null) {
             File csvFile = new File(filename);
-            fileWriter = new FileWriter(csvFile);
-            fileWriter.write("iterations,best,worst,avg\n");
+            try {
+                fileWriter = new FileWriter(csvFile);
+                fileWriter.write("iterations,best,worst,avg\n");
+            } catch (IOException e) {
+                return null;
+            }
         }
         var population = GeneticOperatorHelper.initialize(this.initType, graph, populationSize);
         var newPopulation = new ArrayList<Path>(populationSize);
@@ -56,7 +60,11 @@ public class GeneticAlgorithm {
                 bestPath = new Path(currBest.getNodes(), currBest.getCost());
             }
             if (fileWriter != null){
-                saveMetrics(generation, population, fileWriter);
+                try {
+                    saveMetrics(generation, population, fileWriter);
+                } catch (IOException e) {
+                    return null;
+                }
             }
 
             //Transfer the best paths unchanged
@@ -86,7 +94,11 @@ public class GeneticAlgorithm {
             newPopulation = new ArrayList<>(populationSize);
         }
         if (fileWriter != null) {
-            fileWriter.close();
+            try {
+                fileWriter.close();
+            } catch (IOException e) {
+                return null;
+            }
         }
         return bestPath;
     }

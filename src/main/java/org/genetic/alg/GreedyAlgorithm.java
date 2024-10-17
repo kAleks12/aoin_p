@@ -3,12 +3,11 @@ package org.genetic.alg;
 import org.genetic.alg.entities.Path;
 import org.genetic.utils.entities.DistanceMatrix;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class GreedyAlgorithm {
-    public static List<Path> execute(DistanceMatrix graph) throws IOException {
+    public static List<Path> execute(DistanceMatrix graph) {
         var population = new ArrayList<Path>();
         for (int i = 0; i < graph.size(); i++) {
             Path path = new Path();
