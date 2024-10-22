@@ -25,7 +25,7 @@ public class Main {
     private static final Logger logger = LogManager.getLogger(Main.class);
 
     public static void main(String[] args) throws IOException {
-        var instanceList = List.of("berlin52.tsp", "kroA100.tsp", "kroA150.tsp", "kroA200.tsp");
+        var instanceList = List.of("berlin52.tsp", "kroA100.tsp", "kroA150.tsp", "kroA200.tsp", "ali535.tsp", "gr666.tsp");
 //        var instanceList = List.of("ali535.tsp", "gr666.tsp");
 
         Paths.get("results", "multi").toFile().mkdir();
@@ -38,7 +38,7 @@ public class Main {
                 .setTournamentSize(100)
                 .setCrossoverProbability(0.7f)
                 .setMutationProbability(0.1f)
-                .setEliteSize(100)
+                .setEliteSize(50)
                 .setPopulationSize(500)
                 .setGenerationLimit(3000)
                 .build();
@@ -59,9 +59,9 @@ public class Main {
             Thread thread = new Thread(() -> {
                 var graph = TspLoader.load(Paths.get("src", "main", "resources", "data", instance).toString());
                 if (graph.isPresent()) {
-                    logger.info("Graph loaded successfully");
                     try {
-                        testMultiple(genetic, graph.get(), instance);
+//                        testMultiple(genetic, graph.get(), instance);
+                        testGenetic(genetic, graph.get(), instance);
                     } catch (IOException e) {
                         logger.error("Error during testing", e);
                     }
@@ -75,22 +75,20 @@ public class Main {
         return threads;
     }
 
-    private static void testGenetic(GeneticAlgorithm genetic, DistanceMatrix graph, String instanceName) {
-        for (int i = 0; i < 10; i++) {
-            var timeBody = LocalDateTime.now()
-                    .toString()
-                    .replace(':', '_')
-                    .replace('.', '_')
-                    .replace('-', '_')
-                    .substring(0, 19);
+    private static void testGenetic(GeneticAlgorithm genetic, DistanceMatrix graph, String instanceName) throws IOException {
+        var timeBody = LocalDateTime.now()
+                .toString()
+                .replace(':', '_')
+                .replace('.', '_')
+                .replace('-', '_')
+                .substring(0, 19);
 
-            var metricsPath = Paths.get("results", "genetic", instanceName + '_' + timeBody + ".csv").toString();
-            var result = genetic.execute(graph, metricsPath);
-            System.out.println(result);
-        }
+        var metricsPath = Paths.get("results", "genetic", instanceName + '_' + timeBody + ".csv").toString();
+        var result = genetic.execute(graph, metricsPath);
+        logger.info("Instance {} finished with best result: {}", instanceName, result.getCost());
     }
 
-    private static void testMultiple(GeneticAlgorithm genetic, DistanceMatrix graph,String instanceName) throws IOException {
+    private static void testMultiple(GeneticAlgorithm genetic, DistanceMatrix graph, String instanceName) throws IOException {
         var timeBody = LocalDateTime.now()
                 .toString()
                 .replace(':', '_')
@@ -101,7 +99,7 @@ public class Main {
         var metricsPath = Paths.get("results", "multi", instanceName + '_' + timeBody + ".csv").toString();
         File csvFile = new File(metricsPath);
         try (var fileWriter = new FileWriter(csvFile, true)) {
-                fileWriter.write("alg,best,worst,avg,mean\n");
+            fileWriter.write("alg,best,worst,avg,mean\n");
         } catch (IOException e) {
             return;
         }
