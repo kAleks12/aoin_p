@@ -1,6 +1,8 @@
 package org.genetic.alg;
 
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.genetic.alg.entities.*;
 import org.genetic.utils.RandomGenerator;
 import org.genetic.utils.entities.DistanceMatrix;
@@ -12,17 +14,32 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+@Setter
+@Getter
 public class GeneticAlgorithm {
-    private final InitializationType initType;
-    private final MutationType mutType;
-    private final CrossoverType crossoverType;
-    private final SelectionType selType;
-    private final float mutationProbability;
-    private final float crossoverProbability;
-    private final int generationLimit;
-    private final int populationSize;
-    private final int eliteSize;
-    private final int tournamentSize;
+    private InitializationType initType;
+    private MutationType mutType;
+    private CrossoverType crossoverType;
+    private SelectionType selType;
+    private float mutationProbability;
+    private float crossoverProbability;
+    private int generationLimit;
+    private int populationSize;
+    private int eliteSize;
+    private int tournamentSize;
+
+    public GeneticAlgorithm(GeneticAlgorithm existing) {
+        this.selType = existing.selType;
+        this.initType = existing.initType;
+        this.mutType = existing.mutType;
+        this.crossoverType = existing.crossoverType;
+        this.mutationProbability = existing.mutationProbability;
+        this.crossoverProbability = existing.crossoverProbability;
+        this.generationLimit = existing.generationLimit;
+        this.populationSize = existing.populationSize;
+        this.eliteSize = existing.eliteSize;
+        this.tournamentSize = existing.tournamentSize;
+    }
 
     public GeneticAlgorithm(Builder builder) {
         this.selType = builder.selectionType;
@@ -53,13 +70,13 @@ public class GeneticAlgorithm {
         var population = GeneticOperatorHelper.initialize(this.initType, graph, populationSize);
         var newPopulation = new ArrayList<Path>(populationSize);
         while (generation < generationLimit) {
-            generation ++;
+            generation++;
             population.sort(Comparator.comparing(Path::getCost));
             var currBest = population.get(0);
             if (bestPath == null || currBest.getCost() < bestPath.getCost()) {
                 bestPath = new Path(currBest.getNodes(), currBest.getCost());
             }
-            if (fileWriter != null){
+            if (fileWriter != null) {
                 try {
                     saveMetrics(generation, population, fileWriter);
                 } catch (IOException e) {

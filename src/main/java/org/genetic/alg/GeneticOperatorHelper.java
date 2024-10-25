@@ -1,26 +1,17 @@
 package org.genetic.alg;
 
-import org.genetic.alg.entities.CrossoverType;
-import org.genetic.alg.entities.InitializationType;
-import org.genetic.alg.entities.MutationType;
-import org.genetic.alg.entities.Path;
-import org.genetic.alg.entities.SelectionType;
+import org.genetic.alg.entities.*;
 import org.genetic.utils.RandomGenerator;
 import org.genetic.utils.entities.DistanceMatrix;
 import org.genetic.utils.entities.Interval;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class GeneticOperatorHelper {
     public static List<Path> initialize(InitializationType initType, DistanceMatrix graph, int size) {
         List<Path> paths = new ArrayList<>();
         while (paths.size() < size) {
-            paths.add( switch (initType) {
+            paths.add(switch (initType) {
                 case Greedy -> createGreedyPath(graph);
                 case Random -> createRandomPath(graph);
             });
@@ -29,7 +20,7 @@ public class GeneticOperatorHelper {
     }
 
     public static void mutate(MutationType mutType, Path path, DistanceMatrix graph) {
-         switch (mutType) {
+        switch (mutType) {
             case Swap -> swapMutation(path, graph);
             case Inverse -> inverseMutation(path, graph);
             default -> throw new UnsupportedOperationException("Unsupported MutationType: " + mutType);
@@ -66,7 +57,7 @@ public class GeneticOperatorHelper {
         return path;
     }
 
-    private static Path createGreedyPath (DistanceMatrix graph) {
+    private static Path createGreedyPath(DistanceMatrix graph) {
         Path path = new Path();
         int currNode = RandomGenerator.getRandomInt(graph.size(), Collections.emptyList());
         List<Integer> usedNodes = new ArrayList<>();
@@ -83,29 +74,29 @@ public class GeneticOperatorHelper {
     }
 
     private static void swapMutation(Path path, DistanceMatrix graph) {
-        Interval <Integer> interval = RandomGenerator.getRandomInterval(graph.size());
+        Interval<Integer> interval = RandomGenerator.getRandomInterval(graph.size());
         int firstIndex = interval.min();
         int lastIndex = interval.max();
-        
+
         var nodes = path.getNodes();
         int first = nodes.get(firstIndex);
         int second = nodes.get(lastIndex);
-        
+
         nodes.remove(firstIndex);
         nodes.add(firstIndex, second);
-        
+
         nodes.remove(lastIndex);
         nodes.add(lastIndex, first);
-        
+
         path.setNodes(nodes);
         graph.setPathCost(path);
     }
 
     private static void inverseMutation(Path path, DistanceMatrix graph) {
-        Interval <Integer> interval = RandomGenerator.getRandomInterval(graph.size());
+        Interval<Integer> interval = RandomGenerator.getRandomInterval(graph.size());
         int firstIndex = interval.min();
         int lastIndex = interval.max();
-        
+
         var nodes = path.getNodes();
         List<Integer> newNodes = new ArrayList<>(nodes.size());
 
@@ -116,7 +107,7 @@ public class GeneticOperatorHelper {
                 newNodes.add(nodes.get(i));
             }
         }
-        
+
         path.setNodes(newNodes);
         graph.setPathCost(path);
     }
@@ -133,7 +124,7 @@ public class GeneticOperatorHelper {
             unchanged.add(nodes.get(i));
         }
         nodes = parent2.getNodes();
-        for(int i = 0; i < graph.size(); i++) {
+        for (int i = 0; i < graph.size(); i++) {
             var currNode = nodes.get(i);
             if (unchanged.contains(currNode)) {
                 continue;
@@ -161,7 +152,7 @@ public class GeneticOperatorHelper {
             mapTwoOne.put(nodes2.get(i), nodes1.get(i));
         }
 
-         var newPath1 = new Path(constructChild(nodes1, nodes2, graph.size(), mapTwoOne, interval), 0);
+        var newPath1 = new Path(constructChild(nodes1, nodes2, graph.size(), mapTwoOne, interval), 0);
         graph.setPathCost(newPath1);
 
         var newPath2 = new Path(constructChild(nodes2, nodes1, graph.size(), mapOneTwo, interval), 0);
@@ -171,7 +162,7 @@ public class GeneticOperatorHelper {
     }
 
     private static ArrayList<Integer> constructChild(List<Integer> baseNodes, List<Integer> otherNodes, int size, HashMap<Integer, Integer> mapping, Interval<Integer> interval) {
-        var child =  new ArrayList<Integer>();
+        var child = new ArrayList<Integer>();
         int firstIndex = interval.min();
         int lastIndex = interval.max();
         for (int i = 0; i < size; i++) {
@@ -195,24 +186,23 @@ public class GeneticOperatorHelper {
     }
 
     private static Path rouletteSelection(List<Path> population) {
-        Map<Path, Interval<Double>> weights = new HashMap<>(population.size());
+        List<Member> weights = new ArrayList<>(population.size());
         var multiplier = 1 / population.stream().mapToDouble(Path::getCost).sum();
         var start = 0.0;
         for (Path path : population) {
             var length = path.getCost() * multiplier;
             var interval = new Interval<>(start, start + length);
-            weights.put(path, interval);
+            weights.add(new Member(path, interval));
             start += length;
         }
 
-        var rand = RandomGenerator.randomDouble();
-        var winner = weights.entrySet()
-                .stream()
-                .filter(e -> rand >= e.getValue().min() && rand <= e.getValue().max())
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("No Winner found"));
 
-        return winner.getKey();
+        var rand = RandomGenerator.randomDouble();
+        return weights.stream()
+                .filter(e -> rand >= e.interval().min() && rand <= e.interval().max())
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("No winner found"))
+                .path();
     }
 
     private static Path tournamentSelection(List<Path> population, int tournamentSize) {
