@@ -21,9 +21,11 @@ public class GeneticAlgorithm {
     private MutationType mutType;
     private CrossoverType crossoverType;
     private SelectionType selType;
+    private StopCond stopCond;
     private float mutationProbability;
     private float crossoverProbability;
     private int generationLimit;
+    private int fitnessLimit;
     private int populationSize;
     private int eliteSize;
     private int tournamentSize;
@@ -39,6 +41,8 @@ public class GeneticAlgorithm {
         this.populationSize = existing.populationSize;
         this.eliteSize = existing.eliteSize;
         this.tournamentSize = existing.tournamentSize;
+        this.stopCond = existing.stopCond;
+        this.fitnessLimit = existing.fitnessLimit;
     }
 
     public GeneticAlgorithm(Builder builder) {
@@ -52,11 +56,13 @@ public class GeneticAlgorithm {
         this.populationSize = builder.populationSize;
         this.eliteSize = builder.eliteSize;
         this.tournamentSize = builder.tournamentSize;
+        this.stopCond = builder.stopCond;
+        this.fitnessLimit = builder.fitnessLimit;
     }
 
     public Path execute(DistanceMatrix graph, String filename) {
+        int stopNumber = 0;
         int generation = 0;
-        Path bestPath = null;
         FileWriter fileWriter = null;
         if (filename != null) {
             File csvFile = new File(filename);
@@ -68,8 +74,15 @@ public class GeneticAlgorithm {
             }
         }
         var population = GeneticOperatorHelper.initialize(this.initType, graph, populationSize);
+        Path bestPath = population.get(0);
         var newPopulation = new ArrayList<Path>(populationSize);
-        while (generation < generationLimit) {
+        if ( stopCond == StopCond.Fitness) {
+            stopNumber += populationSize;
+            if (stopNumber >= fitnessLimit) {
+                return bestPath;
+            }
+        }
+        while (generation < generationLimit ) {
             generation++;
             population.sort(Comparator.comparing(Path::getCost));
             var currBest = population.get(0);
@@ -78,7 +91,7 @@ public class GeneticAlgorithm {
             }
             if (fileWriter != null) {
                 try {
-                    saveMetrics(generation, population, fileWriter);
+                    saveMetrics(stopNumber, population, fileWriter);
                 } catch (IOException e) {
                     return null;
                 }
@@ -97,12 +110,24 @@ public class GeneticAlgorithm {
                 List<Path> children;
                 if (RandomGenerator.randomDouble() < crossoverProbability) {
                     children = GeneticOperatorHelper.crossover(this.crossoverType, path1, path2, graph);
+                    if (stopCond == StopCond.Fitness) {
+                        stopNumber += children.size();
+                        if (stopNumber >= fitnessLimit) {
+                            return bestPath;
+                        }
+                    }
                 } else {
                     children = List.of(path1);
                 }
                 for (var child : children) {
                     if (RandomGenerator.randomDouble() < mutationProbability) {
                         GeneticOperatorHelper.mutate(this.mutType, child, graph);
+                        if (stopCond == StopCond.Fitness) {
+                            stopNumber++;
+                            if (stopNumber >= fitnessLimit) {
+                                return bestPath;
+                            }
+                        }
                     }
                     newPopulation.add(child);
                 }
@@ -140,6 +165,7 @@ public class GeneticAlgorithm {
         private CrossoverType crossoverType = CrossoverType.OX;
         private InitializationType initializationType = InitializationType.Greedy;
         private SelectionType selectionType = SelectionType.Tournament;
+        private StopCond stopCond = StopCond.Iterations;
 
         private float mutationProbability = 0.5f;
         private float crossoverProbability = 0.5f;
@@ -147,6 +173,7 @@ public class GeneticAlgorithm {
         private int populationSize = 1000;
         private int eliteSize = 3;
         private int tournamentSize = 5;
+        private int fitnessLimit = 1000;
 
 
         public Builder setMutationType(MutationType mutationType) {
@@ -196,6 +223,16 @@ public class GeneticAlgorithm {
 
         public Builder setTournamentSize(int tournamentSize) {
             this.tournamentSize = tournamentSize;
+            return this;
+        }
+
+        public Builder setStopCond(StopCond stopCond) {
+            this.stopCond = stopCond;
+            return this;
+        }
+
+        public Builder setFitnessLimit(int fitnessLimit) {
+            this.fitnessLimit = fitnessLimit;
             return this;
         }
 

@@ -4,10 +4,7 @@ package org.genetic;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.genetic.alg.GeneticAlgorithm;
-import org.genetic.alg.entities.CrossoverType;
-import org.genetic.alg.entities.InitializationType;
-import org.genetic.alg.entities.MutationType;
-import org.genetic.alg.entities.SelectionType;
+import org.genetic.alg.entities.*;
 import org.genetic.utils.TspLoader;
 
 import java.io.IOException;
@@ -21,10 +18,29 @@ public class Main {
     private static final Logger logger = LogManager.getLogger(Main.class);
 
     public static void main(String[] args) throws IOException {
+//        var genetic = new GeneticAlgorithm.Builder()
+//                .setInitializationType(InitializationType.Greedy)
+//                .setMutationType(MutationType.Inverse)
+//                .setCrossoverType(CrossoverType.OX)
+//                .setSelectionType(SelectionType.Tournament)
+//                .setTournamentSize(5)
+//                .setCrossoverProbability(0.7f)
+//                .setMutationProbability(0.1f)
+//                .setEliteSize(0)
+//                .setPopulationSize(100)
+//                .setGenerationLimit(1000)
+//                .setStopCond(StopCond.Fitness)
+//                .setFitnessLimit(10000)
+//                .build();
+//        var graph = TspLoader.load(Paths.get("src", "main", "resources", "data", "berlin52.tsp").toString());
+//        if (graph.isPresent()) {
+//            System.out.println(genetic.execute(graph.get(), null));
+//        } else {
+//            logger.error("Error while loading graph");
+//        }
+
         var instanceList = List.of("berlin52.tsp", "kroA100.tsp", "kroa150.tsp", "kroA200.tsp", "ali535.tsp", "gr666.tsp");
 
-        Paths.get("results", "multi").toFile().mkdir();
-        Paths.get("results", "run").toFile().mkdir();
         Paths.get("results", "params").toFile().mkdir();
         Paths.get("results", "features").toFile().mkdir();
         var genetic = new GeneticAlgorithm.Builder()
@@ -38,6 +54,8 @@ public class Main {
                 .setEliteSize(50)
                 .setPopulationSize(500)
                 .setGenerationLimit(1000)
+                .setStopCond(StopCond.Fitness)
+                .setFitnessLimit(10000)
                 .build();
 
         for (var instance : instanceList) {
@@ -55,8 +73,8 @@ public class Main {
                     logger.info("Starting params tests");
                     testParams(genetic, graph.get(), instance);
 
-                    logger.info("Starting features tests");
-                    testFeatures(genetic, graph.get(), instance);
+//                    logger.info("Starting features tests");
+//                    testFeatures(genetic, graph.get(), instance);
                 } catch (IOException e) {
                     logger.error("Error during testing", e);
                 }
